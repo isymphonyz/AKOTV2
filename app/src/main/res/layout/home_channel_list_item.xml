@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp">
+
+    <ImageView
+        android:id="@+id/imgLogo"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_centerVertical="true"
+        android:layout_margin="8dp"
+        android:adjustViewBounds="true"
+        android:src="@mipmap/ic_logo"/>
+
+    <ImageView
+        android:id="@+id/btnFavorite"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="8dp"
+        android:adjustViewBounds="true"
+        android:src="@mipmap/ic_launcher"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/imgLogo"
+        android:layout_toLeftOf="@+id/btnFavorite"
+        android:layout_margin="8dp"
+        android:orientation="vertical">
+
+        <isymphonyz.akotv.customview.RSUTextView
+            android:id="@+id/txtName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textAppearance="@android:style/TextAppearance.Medium"
+            android:textStyle="bold"/>
+
+        <isymphonyz.akotv.customview.RSUTextView
+            android:id="@+id/txtTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textAppearance="@android:style/TextAppearance.Small"
+            android:textStyle="bold"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

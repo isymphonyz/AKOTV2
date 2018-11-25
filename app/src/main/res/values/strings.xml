@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">AKOTV2</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+
+    <!-- Home -->
+    <string name="home_txt_menu_youtube">ดูรายการย้อนหลัง</string>
+    <string name="home_txt_back_to_exit">กดอีกครั้งเพื่อออกจากแอพพลิเคชั่น</string>
+</resources>
