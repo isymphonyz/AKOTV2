@@ -236,6 +236,38 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         }
 
         webView.loadUrl(urlYoutube);
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        allowAPI = new AllowAPI();
+        allowAPI.setListener(new AllowAPI.AllowAPIListener() {
+            @Override
+            public void onAllowAPIPreExecuteConcluded() {
+
+            }
+
+            @Override
+            public void onAllowAPIPostExecuteConcluded(String result) {
+                try {
+                    Log.d(TAG, "result: " + result);
+                    JSONObject jObj = new JSONObject(result);
+                    String status = jObj.optString("allow");
+
+                    Log.d(TAG, "status: " + status);
+                    if (status.equals("1")) {
+
+                    } else {
+                        finish();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        allowAPI.execute("");
     }
 
     @Override
@@ -268,33 +300,6 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
                 drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             }
         }
-
-        allowAPI = new AllowAPI();
-        allowAPI.setListener(new AllowAPI.AllowAPIListener() {
-            @Override
-            public void onAllowAPIPreExecuteConcluded() {
-
-            }
-
-            @Override
-            public void onAllowAPIPostExecuteConcluded(String result) {
-                try {
-                    Log.d(TAG, "result: " + result);
-                    JSONObject jObj = new JSONObject(result);
-                    String status = jObj.optString("allow");
-
-                    Log.d(TAG, "status: " + status);
-                    if (status.equals("1")) {
-
-                    } else {
-                        finish();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        allowAPI.execute("");
     }
 
     @Override

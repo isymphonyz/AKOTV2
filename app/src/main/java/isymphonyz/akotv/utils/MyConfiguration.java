@@ -8,5 +8,5 @@ public class MyConfiguration {
     public static String YOUTUBE_CHANNEL = "https://www.youtube.com/channel/UCdvttxv-0szrPub0Tl4SpqA/videos";
 
     public static String DOMAIN = "http://plearnengineering.com/ako/";
-    public static String URL_ALLOW = "akoradio_allow.txt";
+    public static String URL_ALLOW = "akotv_allow.txt";
 }
