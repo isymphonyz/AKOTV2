@@ -2,6 +2,8 @@ package isymphonyz.akotv;
 
 import android.app.Activity;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Build;
@@ -19,11 +21,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -220,8 +224,12 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         webSettings.setUseWideViewPort(true);
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
 
+
         WebViewClientImpl webViewClient = new WebViewClientImpl(this);
         webView.setWebViewClient(webViewClient);
+        //webView.setWebViewClient(new Browser());
+        webView.setWebChromeClient(new MyWebClient());
+
 
         webView.addJavascriptInterface(new AppJavaScriptProxy(this, webView), "androidAppProxy");
         //webView.loadUrl(url);
@@ -236,7 +244,6 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         }
 
         webView.loadUrl(urlYoutube);
-
     }
 
     @Override
@@ -278,8 +285,8 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         //mDrawerToggle.onConfigurationChanged(newConfig);
 
         // Checks the orientation of the screen for landscape and portrait
-        /*DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if(videoView.isShown()) {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        /*if(videoView.isShown()) {
             if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 Log.d("AKOTVHome", "Landscape");
                 this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -300,6 +307,25 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
                 drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             }
         }*/
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Log.d("AKOTVHome", "Landscape");
+            this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            this.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            videoView.setLayoutParams(paramsLandscape);
+            layoutTitle.setVisibility(View.GONE);
+            listView.setVisibility(View.GONE);
+            layout.setBackgroundColor(Color.BLACK);
+            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT ){
+            Log.d("AKOTVHome", "Portrait");
+            this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            this.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            videoView.setLayoutParams(paramsPortrait);
+            layoutTitle.setVisibility(View.VISIBLE);
+            listView.setVisibility(View.VISIBLE);
+            layout.setBackgroundColor(Color.TRANSPARENT);
+            drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+        }
     }
 
     @Override
@@ -439,5 +465,62 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    class Browser
+            extends WebViewClient
+    {
+        Browser() {}
+
+        public boolean shouldOverrideUrlLoading(WebView paramWebView, String paramString)
+        {
+            paramWebView.loadUrl(paramString);
+            return true;
+        }
+    }
+
+    public class MyWebClient
+            extends WebChromeClient
+    {
+        private View mCustomView;
+        private WebChromeClient.CustomViewCallback mCustomViewCallback;
+        protected FrameLayout mFullscreenContainer;
+        private int mOriginalOrientation;
+        private int mOriginalSystemUiVisibility;
+
+        public MyWebClient() {}
+
+        public Bitmap getDefaultVideoPoster()
+        {
+            if (AKOTVHome.this == null) {
+                return null;
+            }
+            return BitmapFactory.decodeResource(AKOTVHome.this.getApplicationContext().getResources(), 2130837573);
+        }
+
+        public void onHideCustomView()
+        {
+            ((FrameLayout)AKOTVHome.this.getWindow().getDecorView()).removeView(this.mCustomView);
+            this.mCustomView = null;
+            AKOTVHome.this.getWindow().getDecorView().setSystemUiVisibility(this.mOriginalSystemUiVisibility);
+            AKOTVHome.this.setRequestedOrientation(this.mOriginalOrientation);
+            this.mCustomViewCallback.onCustomViewHidden();
+            this.mCustomViewCallback = null;
+        }
+
+        public void onShowCustomView(View paramView, WebChromeClient.CustomViewCallback paramCustomViewCallback)
+        {
+            if (this.mCustomView != null)
+            {
+                onHideCustomView();
+                return;
+            }
+            this.mCustomView = paramView;
+            this.mOriginalSystemUiVisibility = AKOTVHome.this.getWindow().getDecorView().getSystemUiVisibility();
+            this.mOriginalOrientation = AKOTVHome.this.getRequestedOrientation();
+            this.mCustomViewCallback = paramCustomViewCallback;
+            ((FrameLayout)AKOTVHome.this.getWindow().getDecorView()).addView(this.mCustomView, new FrameLayout.LayoutParams(-1, -1));
+            AKOTVHome.this.getWindow().getDecorView().setSystemUiVisibility(3846);
+        }
     }
 }
