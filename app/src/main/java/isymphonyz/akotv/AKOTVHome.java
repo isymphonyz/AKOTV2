@@ -278,7 +278,7 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         //mDrawerToggle.onConfigurationChanged(newConfig);
 
         // Checks the orientation of the screen for landscape and portrait
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        /*DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if(videoView.isShown()) {
             if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 Log.d("AKOTVHome", "Landscape");
@@ -299,7 +299,7 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
                 layout.setBackgroundColor(Color.TRANSPARENT);
                 drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
             }
-        }
+        }*/
     }
 
     @Override
