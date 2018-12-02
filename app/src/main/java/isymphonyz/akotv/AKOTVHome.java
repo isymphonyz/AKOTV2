@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Build;
+import android.os.CountDownTimer;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -18,7 +19,9 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -84,7 +87,12 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.home);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -100,6 +108,7 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         layout = (RelativeLayout) findViewById(R.id.layout);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         layoutTitle = (RelativeLayout) findViewById(R.id.layoutTitle);
+        layoutTitle.setVisibility(View.GONE);
 
         btnMenu = (ImageView) findViewById(R.id.btnMenu);
         btnMenu.setOnClickListener(new View.OnClickListener() {
@@ -191,6 +200,24 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
                 videoView.start();
             }
         });
+        videoView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                layoutTitle.setVisibility(View.VISIBLE);
+                new CountDownTimer(2500, 1000) {
+
+                    public void onTick(long millisUntilFinished) {
+
+                    }
+
+                    public void onFinish() {
+                        layoutTitle.setVisibility(View.GONE);
+                    }
+
+                }.start();
+                return false;
+            }
+        });
 
         logoList = new ArrayList<Integer>();
         logoList.add(R.mipmap.ic_logo);
@@ -214,6 +241,24 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         listView.setAdapter(adapter);
 
         webView = (WebView) findViewById(R.id.webView);
+        webView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                layoutTitle.setVisibility(View.VISIBLE);
+                new CountDownTimer(2500, 1000) {
+
+                    public void onTick(long millisUntilFinished) {
+
+                    }
+
+                    public void onFinish() {
+                        layoutTitle.setVisibility(View.GONE);
+                    }
+
+                }.start();
+                return false;
+            }
+        });
 
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
