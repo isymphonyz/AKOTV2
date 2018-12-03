@@ -9,4 +9,12 @@
     <!-- Home -->
     <string name="home_txt_menu_youtube">ดูรายการย้อนหลัง</string>
     <string name="home_txt_back_to_exit">กดอีกครั้งเพื่อออกจากแอพพลิเคชั่น</string>
+
+    <string name="title_activity_fullscreen">FullscreenActivity</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+
+    <string name="title_activity_fullscreen2">FullscreenActivity2</string>
+
+    <string name="title_activity_fullscreen3">FullscreenActivity3</string>
 </resources>

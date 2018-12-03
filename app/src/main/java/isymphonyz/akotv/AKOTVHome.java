@@ -1,13 +1,21 @@
 package isymphonyz.akotv;
 
+import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.CountDownTimer;
+import android.provider.Settings;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -16,11 +24,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.ValueCallback;
@@ -35,6 +45,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import org.json.JSONException;
@@ -50,7 +61,9 @@ import java.util.ArrayList;
 import isymphonyz.akotv.adapter.AKOTVChannelListAdapter;
 import isymphonyz.akotv.adapter.AKOTVHomeMenuListAdapter;
 import isymphonyz.akotv.connection.AllowAPI;
+import isymphonyz.akotv.service.HUD;
 import isymphonyz.akotv.utils.AppJavaScriptProxy;
+import isymphonyz.akotv.utils.HomeKeyLocker;
 import isymphonyz.akotv.utils.MyConfiguration;
 import isymphonyz.akotv.utils.UrlCache;
 
@@ -84,14 +97,44 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
 
     private AllowAPI allowAPI;
 
+    private HomeKeyLocker mHomeKeyLocker;
+
+    public static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 5469;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                        | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+                PixelFormat.TRANSLUCENT);
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //getWindow().addFlags(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        //getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
+        //hideSystemUI();
+
+        Intent intent = new Intent(getApplicationContext(), HUD.class);
+        //startService(intent);
 
         setContentView(R.layout.home);
+
+        checkPermission();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -102,10 +145,39 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
+        //drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+
+        ActionBar actionBar = this.getActionBar();
+        if (actionBar != null) {
+            Log.d(TAG, "actionBar");
+            actionBar.setHomeButtonEnabled(false); // disable the button
+            actionBar.setDisplayHomeAsUpEnabled(false); // remove the left caret
+            actionBar.setDisplayShowHomeEnabled(false); // remove the icon
+            actionBar.setHomeAsUpIndicator(null);
+        }
+
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                //askedForOverlayPermission = true;
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, 11);
+            }
+        }*/
+
+        mHomeKeyLocker = new HomeKeyLocker();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //mHomeKeyLocker.lock(AKOTVHome.this);
+            }
+        });
+
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         layout = (RelativeLayout) findViewById(R.id.layout);
+        layout.setBackgroundColor(Color.BLACK);
+
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         layoutTitle = (RelativeLayout) findViewById(R.id.layoutTitle);
         layoutTitle.setVisibility(View.GONE);
@@ -171,6 +243,7 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
 
         progressBar.setVisibility(View.VISIBLE);
         videoView = (VideoView) findViewById(R.id.videoView);
+        videoView.setZOrderOnTop(true);
         videoView.setVideoPath(urlVideo);
         videoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
 
@@ -203,6 +276,7 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         videoView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                Log.d(TAG, "videoView.setOnTouchListener");
                 layoutTitle.setVisibility(View.VISIBLE);
                 new CountDownTimer(2500, 1000) {
 
@@ -239,6 +313,7 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         adapter.setIsFavoriteList(isFavoriteList);
         listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(adapter);
+        //listView.setVisibility(View.INVISIBLE);
 
         webView = (WebView) findViewById(R.id.webView);
         webView.setOnTouchListener(new View.OnTouchListener() {
@@ -289,6 +364,38 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         }
 
         webView.loadUrl(urlYoutube);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        Log.d(TAG, "onAttachedToWindow: ");
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        Log.d(TAG, "onWindowFocusChanged: " + hasFocus);
+        if (hasFocus) {
+            //hideSystemUI();
+        }
+    }
+
+    private void hideSystemUI() {
+        // Enables regular immersive mode.
+        // For "lean back" mode, remove SYSTEM_UI_FLAG_IMMERSIVE.
+        // Or for "sticky immersive," replace it with SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE
+                        // Set the content to appear under the system bars so that the
+                        // content doesn't resize when the system bars hide and show.
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        // Hide the nav bar and status bar
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 
     @Override
@@ -524,9 +631,7 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
         }
     }
 
-    public class MyWebClient
-            extends WebChromeClient
-    {
+    public class MyWebClient extends WebChromeClient {
         private View mCustomView;
         private WebChromeClient.CustomViewCallback mCustomViewCallback;
         protected FrameLayout mFullscreenContainer;
@@ -566,6 +671,32 @@ public class AKOTVHome extends AppCompatActivity implements NavigationView.OnNav
             this.mCustomViewCallback = paramCustomViewCallback;
             ((FrameLayout)AKOTVHome.this.getWindow().getDecorView()).addView(this.mCustomView, new FrameLayout.LayoutParams(-1, -1));
             AKOTVHome.this.getWindow().getDecorView().setSystemUiVisibility(3846);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE) {
+            if (!Settings.canDrawOverlays(this)) {
+                // You don't have permission
+                checkPermission();
+            } else {
+                // Do as per your logic
+            }
+
+        }
+
+    }
+
+    public void checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE);
+            }
         }
     }
 }
